@@ -4,7 +4,10 @@ const {user,single_event,events} =require("./helpers")
 
 module.exports = {
   // List out all the Bookings
-  bookings: async () => {
+  bookings: async (args,req) => {
+    if(!req.isAuthorized){
+      throw new Error("Not Authorized")
+    }
     try {
       const bookings = await booking_modal.find()
       return bookings.map((item) => {
@@ -23,12 +26,15 @@ module.exports = {
   },
 
   // Create Bookings
-  bookEvent: async (args) => {
+  bookEvent: async (args,req) => {
+    if(!req.isAuthorized){
+      throw new Error("Not Authorized")
+    }
     try {
       const FetchedEvent = await events_modal.findOne({ _id: args.event_id })
     const booking = new booking_modal({
       event_id: FetchedEvent,
-      user_id: "64d7786f8f57adff24350313"
+      user_id: req.user_id
     })
     const result = await booking.save()
     return {
@@ -46,7 +52,10 @@ module.exports = {
   },
   
   // Cancel Bookings
-  cancelBooking: async (args) => {
+  cancelBooking: async (args,req) => {
+    if(!req.isAuthorized){
+      throw new Error("Not Authorized")
+    }
     try {
       const booking = await booking_modal.findById(args.booking_id).populate("event_id")
       const event = {

@@ -21,13 +21,16 @@ module.exports = {
   },
  
   // Create Event
-  createEvent: async (args) => {
+  createEvent: async (args,req) => {
+    if(!req.isAuthorized){
+      throw new Error("Not Authorized")
+    }
     const event = new events_modal({
       title: args.eventInput.title,
       description: args.eventInput.description,
       price: +args.eventInput.price,
       date: new Date(args.eventInput.date),
-      creator: "64d7786f8f57adff24350313"
+      creator: req.user_id
     });
     let created_event
     try {
@@ -38,7 +41,7 @@ module.exports = {
         date: new Date(result._doc.date).toISOString(),
         creator: user.bind(this, result._doc.creator)
       };
-      const userData = await user_modal.findById("64d7786f8f57adff24350313")
+      const userData = await user_modal.findById(req.user_id)
       if (userData.length == 0) {
         throw new Error("User Not Found")
       }
