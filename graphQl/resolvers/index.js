@@ -155,15 +155,12 @@ module.exports = {
   },
   // Cancel Bookings
   cancelBooking: async (args) => {
-    console.log(args,"ppppppppppp");
     try {
       const booking = await booking_modal.findById(args.booking_id).populate("event_id")
-      console.log(booking.event_id._doc)
       const event = {
         ...booking.event_id._doc,
         _id:booking.event_id.id,
         creator: user.bind(this, booking.event_id._doc.creator),
-        
       }
       await booking_modal.deleteOne({ _id: args.booking_id })
       return {
@@ -174,5 +171,4 @@ module.exports = {
       throw err
     }
   }
-
 }
