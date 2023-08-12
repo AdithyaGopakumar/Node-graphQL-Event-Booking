@@ -1,5 +1,6 @@
 const events_modal = require("../../models/events");
-const user_modal = require("../../models/users")
+const user_modal = require("../../models/users");
+const booking_modal = require("../../models/bookings");
 const bcrypt = require('bcryptjs')
 
 // populating Events
@@ -20,6 +21,19 @@ const events = async (eventsIds) => {
   }
 }
 
+const single_event = async (event_id) => {
+  try {
+    const event = await events_modal.findOne({ _id: event_id })
+    return {
+      ...event._doc,
+      _id: event.id,
+      creator: user.bind(this, event.creator)
+    }
+  } catch (err) {
+    throw err
+  }
+}
+
 // populating Users
 const user = async (userId) => {
   try {
@@ -27,6 +41,7 @@ const user = async (userId) => {
     return {
       ...user._doc,
       _id: user.id,
+      password: null,
       createdEvents: events.bind(this, user._doc.created_events)
     }
   } catch (err) {
@@ -48,6 +63,25 @@ module.exports = {
           creator: user.bind(this, item._doc.creator)
         };
       });
+    } catch (err) {
+      throw err;
+    }
+  },
+  // List out all the Bookings
+  bookings: async () => {
+    try {
+      const bookings = await booking_modal.find()
+      console.log(bookings);
+      return bookings.map((item) => {
+        return {
+          ...item._doc,
+          _id: item.id,
+          user_id: user.bind(this, item.user_id),
+          event_id: single_event.bind(this, item.event_id),
+          createdAt: new Date(item._doc.createdAt).toISOString(),
+          updatedAt: new Date(item._doc.updatedAt).toISOString(),
+        }
+      })
     } catch (err) {
       throw err;
     }
@@ -101,5 +135,44 @@ module.exports = {
     } catch (err) {
       throw err
     }
+  },
+  // Create Bookings
+  bookEvent: async (args) => {
+    const FetchedEvent = await events_modal.findOne({ _id: args.event_id })
+    const booking = new booking_modal({
+      event_id: FetchedEvent,
+      user_id: "64d720ec305cbdb3dfed18c5"
+    })
+    const result = await booking.save()
+    return {
+      ...result._doc,
+      _id: result.id,
+      user_id: user.bind(this, result.user_id),
+      event_id: single_event.bind(this, result.event_id),
+      createdAt: new Date(result._doc.createdAt).toISOString(),
+      updatedAt: new Date(result._doc.updatedAt).toISOString(),
+    }
+  },
+  // Cancel Bookings
+  cancelBooking: async (args) => {
+    console.log(args,"ppppppppppp");
+    try {
+      const booking = await booking_modal.findById(args.booking_id).populate("event_id")
+      console.log(booking.event_id._doc)
+      const event = {
+        ...booking.event_id._doc,
+        _id:booking.event_id.id,
+        creator: user.bind(this, booking.event_id._doc.creator),
+        
+      }
+      await booking_modal.deleteOne({ _id: args.booking_id })
+      return {
+        event,
+        message:"This event has been deleted successfully"
+      }
+    } catch (err) {
+      throw err
+    }
   }
+
 }
