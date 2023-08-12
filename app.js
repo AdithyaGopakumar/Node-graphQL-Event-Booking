@@ -26,7 +26,7 @@ app.use(
 mongoose
   .connect(MONGO_URL)
   .then(() => {
-    console.log("Connected to MongoDB");
+    console.log(`Connected to MongoDB @ ${MONGO_URL}`);
   })
   .catch((err) => {
     console.log(err);
